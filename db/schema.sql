@@ -12,3 +12,5 @@ CREATE TABLE employees (
     salary INT(10) NOT NULL,
     manager VARCHAR(25)
 );
+
+updated
