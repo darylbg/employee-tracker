@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
 require('dotenv').config();
+const figlet = require('figlet');
 
 const db = mysql.createConnection({
       host: 'localhost',
@@ -12,11 +13,21 @@ const db = mysql.createConnection({
       database: process.env.DATABASE
     });
   
-db.connect((error) => {
-    if (error) throw error
-    console.log(`Connected to the database.`);
-
-    inquirer.prompt([
+    db.connect((error) => {
+        if (error) throw error
+        figlet('Employee Manager', function(err, data) {
+            if (err) {
+                console.log('Something went wrong...');
+                console.dir(err);
+                return;
+            }
+            console.log(data);
+            promptUser(); // Call the inquirer prompt inside the figlet callback
+        });
+    });
+    
+    function promptUser() {
+        inquirer.prompt([
             /* Pass your questions in here */
             {
                 type: 'list',
@@ -27,13 +38,19 @@ db.connect((error) => {
         ])
         .then((answers) => {
             // Use user feedback for... whatever!!
-            console.table([answers]);
+            const choice = answers.choices;
+            if (answers.choices = 'View all employees') {
+                db.query(`SELECT * FROM employee`, (error, result) => {
+                    console.table(result);
+                })
+            }
         })
         .catch((error) => {
             if (error.isTtyError) {
-            // Prompt couldn't be rendered in the current environment
+                // Prompt couldn't be rendered in the current environment
             } else {
-            // Something else went wrong
+                // Something else went wrong
             }
         });
-});
+    }
+    
