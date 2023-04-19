@@ -3,13 +3,25 @@ CREATE DATABASE employees_db;
 
 USE employees_db;
 
-CREATE TABLE employees (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(25) NOT NULL,
-    last_name VARCHAR(25) NOT NULL,
-    title VARCHAR(25) NOT NULL,
-    department VARCHAR(25) NOT NULL,
-    salary INT(10) NOT NULL,
-    manager VARCHAR(25)
+CREATE TABLE department (
+    id INT PRIMARY KEY,
+    name VARCHAR(30)
 );
-this should not appear
+
+CREATE TABLE role (
+    id INT PRIMARY KEY,
+    title VARCHAR(25),
+    salary DECIMAL,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL
+);
+
+CREATE TABLE employee (
+    id INT PRIMARY KEY,
+    first_name VARCHAR(25),
+    last_name VARCHAR(25),
+    role_id INT,
+    manager_id INT,
+    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE SET NULL,
+    FOREIGN KEY (manager_id) REFERENCES employee(id) ON DELETE SET NULL
+);
