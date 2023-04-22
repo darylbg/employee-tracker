@@ -89,39 +89,44 @@ async function promptUser() {
                     }
                 });
                 break;
+            case 'Add a role':
+                const [rows] = await db.promise().query(`SELECT id, name FROM department`);
+                const departmentChoices = rows.map((row) => ({
+                    name: row.name,
+                    value: row.id
+                }));
+                console.log(departmentChoices);
+                const { roleTitle, roleSalary, roleDepartment } = await inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'roleTitle',
+                        message: 'Enter a new role name'
+                    },
+                    {
+                        type: 'input',
+                        name: 'roleSalary',
+                        message: "Enter a salary for the role"
+                    },
+                    {
+                        type: 'list',
+                        name: 'roleDepartment',
+                        message: 'Select a department for the role',
+                        choices: departmentChoices
+                    }
+                ]);
+                //console.log(`name: ${roleTitle}, salary: ${roleSalary}, department: ${roleDepartment}`);
+                promptUser();
+                db.execute(Choices.addRole(roleTitle, roleSalary, roleDepartment), (error, result) => {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.table(result);
+                        console.log('Successfully added a new role');
+                        promptUser();
+                    }
+                });
+                break;
         }
-        // {
-        //     type: 'input',
-        //     name: 'addDepartment',
-        //     message: 'Enter a new department',
-        //     when: mainSelect.choices === 'Add a department'
-        // },
-        // {
-        //     type: 'input',
-        //     name: 'addRole',
-        //     message: 'Enter a new role'
-        // },
-        // {
-        //     type: 'input',
-        //     name: 'eFirstName',
-        //     message: "Enter the employee's first name"
-        // },
-        // {
-        //     type: 'input',
-        //     name: 'eLastName',
-        //     message: "Enter the employee's last name"
-        // },
-        // {
-        //     type: 'input',
-        //     name: 'eLastName',
-        //     message: "Enter the employee's role"
-        // },
-        // {
-        //     type: 'input',
-        //     name: 'eLastName',
-        //     message: "Enter the employee's manager"
-        // }
-        // Use user feedback for... whatever!
     } catch (error) {
         if (error) {
             console.log(error);
