@@ -9,7 +9,9 @@ const Choices = {
                     LEFT JOIN department d ON r.department_id = d.id
                     LEFT JOIN employee m ON e.manager_id = m.id;`,
         addDepartment: (departmentName) => `INSERT INTO department (name) VALUES ('${departmentName}')`,
-        addRole: (roleTitle, roleSalary, roleDepartment) => `INSERT INTO role (title, salary, department_id) VALUES ('${roleTitle}', ${roleSalary}, ${roleDepartment})`
+        addRole: (roleTitle, roleSalary, roleDepartment) => `INSERT INTO role (title, salary, department_id) VALUES ('${roleTitle}', ${roleSalary}, ${roleDepartment})`,
+        addEmployee: (firstName, lastName, role, manager)=> `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${firstName}', '${lastName}', ${role}, '${manager}')`,
+        uRole: (roles, employees) => `UPDATE employee SET role_id=(${roles}) WHERE id=(${employees})`
 }
 
 module.exports = Choices;

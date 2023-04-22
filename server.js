@@ -36,7 +36,7 @@ async function promptUser() {
                 type: 'list',
                 name: 'mainSelect',
                 message: 'What would you like to do?',
-                choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee', 'Quit']
+                choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Quit']
             }
         ]);
         switch (mainSelect) {
@@ -90,12 +90,11 @@ async function promptUser() {
                 });
                 break;
             case 'Add a role':
-                const [rows] = await db.promise().query(`SELECT id, name FROM department`);
-                const departmentChoices = rows.map((row) => ({
-                    name: row.name,
-                    value: row.id
+                const [departments] = await db.promise().query(`SELECT id, name FROM department`);
+                const departmentChoices = departments.map((department) => ({
+                    name: department.name,
+                    value: department.id
                 }));
-                console.log(departmentChoices);
                 const { roleTitle, roleSalary, roleDepartment } = await inquirer.prompt([
                     {
                         type: 'input',
@@ -114,14 +113,92 @@ async function promptUser() {
                         choices: departmentChoices
                     }
                 ]);
-                //console.log(`name: ${roleTitle}, salary: ${roleSalary}, department: ${roleDepartment}`);
-                promptUser();
                 db.execute(Choices.addRole(roleTitle, roleSalary, roleDepartment), (error, result) => {
                     if (error) {
                         console.log(error);
                     } else {
                         console.table(result);
                         console.log('Successfully added a new role');
+                        promptUser();
+                    }
+                });
+                break;
+            case 'Add an employee':
+                const [currentRoles] = await db.promise().query(`SELECT id, title FROM role`);
+                const currentRolesChoices = currentRoles.map((currentRole) => ({
+                    name: currentRole.title,
+                    value: currentRole.id
+                }));
+                const [currentManagers] = await db.promise().query(`SELECT manager_id, CONCAT(first_name, ' ', last_name) AS name FROM employee WHERE manager_id IS NOT NULL`);
+                const currentManagersChoices = currentManagers.map((currentManager) => ({
+                    name: currentManager.name,
+                    value: currentManager.manager_id
+                }));
+                const { firstName, lastName, role, manager } = await inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'firstName',
+                        message: "Enter the employee's first name"
+                    },
+                    {
+                        type: 'input',
+                        name: 'lastName',
+                        message: "Enter the employee's last name"
+                    },
+                    {
+                        type: 'list',
+                        name: 'role',
+                        message: "select the employee's manager",
+                        choices: currentRolesChoices
+                    },
+                    {
+                        type: 'list',
+                        name: 'manager',
+                        message: "Select the employee's manager",
+                        choices: currentManagersChoices
+                    },
+                ]);
+                db.execute(Choices.addEmployee(firstName, lastName, role, manager), (error, result) => {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.table(result);
+                        console.log('Successfully added a new employee');
+                        promptUser();
+                    }
+                });
+                break;
+            case 'Update employee role':
+                const [currentEmployees] = await db.promise().query(`SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee`);
+                const currentEmployeesChoices = currentEmployees.map((currentEmployee) => ({
+                    name: currentEmployee.name,
+                    value: currentEmployee.id
+                }));
+                const [updateRoles] = await db.promise().query(`SELECT id, title FROM role`);
+                const updateRolesChoices = updateRoles.map((updateRole) => ({
+                    name: updateRole.title,
+                    value: updateRole.id
+                }));
+                const { employees, roles } = await inquirer.prompt([
+                    {
+                      type: 'list',
+                      name: 'employees',
+                      message: 'Select which employee you want to update',
+                      choices: currentEmployeesChoices
+                    },
+                    {
+                      type: 'list',
+                      name: 'roles',
+                      message: 'Select which role you want to update the employee to',
+                      choices: updateRolesChoices
+                    }
+                  ]);                  
+                db.execute(Choices.uRole(roles, employees), (error, result) => {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.table(result)
+                        console.log('Successfully updated employees role');
                         promptUser();
                     }
                 });
