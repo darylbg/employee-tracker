@@ -4,7 +4,6 @@ const cTable = require('console.table');
 require('dotenv').config();
 const figlet = require('figlet');
 const Choices = require('./choices/choices.js');
-//const choices = new(Choices);
 
 const db = mysql.createConnection({
       host: 'localhost',
@@ -90,7 +89,7 @@ async function promptUser() {
                 });
                 break;
             case 'Add a role':
-                const [departments] = await db.promise().query(`SELECT id, name FROM department`);
+                const [departments] = await db.promise().query(Choices.getDepartments);
                 const departmentChoices = departments.map((department) => ({
                     name: department.name,
                     value: department.id
@@ -124,12 +123,12 @@ async function promptUser() {
                 });
                 break;
             case 'Add an employee':
-                const [currentRoles] = await db.promise().query(`SELECT id, title FROM role`);
+                const [currentRoles] = await db.promise().query(Choices.getRoles);
                 const currentRolesChoices = currentRoles.map((currentRole) => ({
                     name: currentRole.title,
                     value: currentRole.id
                 }));
-                const [currentManagers] = await db.promise().query(`SELECT manager_id, CONCAT(first_name, ' ', last_name) AS name FROM employee WHERE manager_id IS NOT NULL`);
+                const [currentManagers] = await db.promise().query(Choices.getManagers);
                 const currentManagersChoices = currentManagers.map((currentManager) => ({
                     name: currentManager.name,
                     value: currentManager.manager_id
@@ -148,7 +147,7 @@ async function promptUser() {
                     {
                         type: 'list',
                         name: 'role',
-                        message: "select the employee's manager",
+                        message: "select the employee's role",
                         choices: currentRolesChoices
                     },
                     {
@@ -168,17 +167,18 @@ async function promptUser() {
                     }
                 });
                 break;
-            case 'Update employee role':
-                const [currentEmployees] = await db.promise().query(`SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee`);
+            case 'Update an employee role':
+                const [currentEmployees] = await db.promise().query(Choices.getEmployees);
                 const currentEmployeesChoices = currentEmployees.map((currentEmployee) => ({
                     name: currentEmployee.name,
                     value: currentEmployee.id
                 }));
-                const [updateRoles] = await db.promise().query(`SELECT id, title FROM role`);
+                const [updateRoles] = await db.promise().query(Choices.getRoles);
                 const updateRolesChoices = updateRoles.map((updateRole) => ({
                     name: updateRole.title,
                     value: updateRole.id
                 }));
+                console.log(currentEmployees);
                 const { employees, roles } = await inquirer.prompt([
                     {
                       type: 'list',
@@ -202,6 +202,10 @@ async function promptUser() {
                         promptUser();
                     }
                 });
+                break;
+            case 'Quit':
+                console.log('Successfully exited the employee manager program!');
+                process.exit();
                 break;
         }
     } catch (error) {
