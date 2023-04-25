@@ -47,8 +47,9 @@ The application allows you to:
 ## Deployment
 
 This application is not deployed live, but it can be installed locally and ran as shown [here](#installation).
-* A walkthrough video of the application in use can be found here.
+* A walkthrough video of the application in use can be found [here](https://www.youtube.com/watch?v=5s-8fIUCF0w).
 * The source code for this project can be found [here](https://github.com/darylbg/employee-tracker)
+* The app start menu will look like the following screenshot ![screenshot](./assets/screenshot-1.PNG)
 
 ## License
 
