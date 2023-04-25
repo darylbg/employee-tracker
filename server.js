@@ -13,7 +13,7 @@ const db = mysql.createConnection({
       password: process.env.PASSWORD,
       database: process.env.DATABASE
 });
-  
+// Figlet package used to render text art in console
 db.connect((error) => {
     if (error) throw error
     figlet('Employee Manager', function(err, data) {
@@ -23,14 +23,14 @@ db.connect((error) => {
             return;
         }
         console.log(data);
-        promptUser(); // Call the inquirer prompt inside the figlet callback
+        promptUser();
     });
 });
-    
+// Inquirer package prompts 
 async function promptUser() {
+    // Main menu prompts defined here
     try {
         const { mainSelect } = await inquirer.prompt([
-            /* Pass your questions in here */
             {
                 type: 'list',
                 name: 'mainSelect',
@@ -38,9 +38,10 @@ async function promptUser() {
                 choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Quit']
             }
         ]);
+        // Specifies quieries to the database based on which prompt was selected from main menu
         switch (mainSelect) {
             case 'View all departments':
-                db.query(Choices.allDepartments, (error, result) => {
+                db.query(Choices.getDepartments, (error, result) => {
                     if (error) {
                         console.log(error);
                     } else {
@@ -69,6 +70,7 @@ async function promptUser() {
                     }
                 });
                 break;
+            // A new prompt is triggerred for user to input new role
             case 'Add a department':
                 const { departmentName } = await inquirer.prompt([
                     {
@@ -77,13 +79,13 @@ async function promptUser() {
                         message: 'Enter a new department name'
                     }
                 ]);
+                // New role created is put into database
                 db.execute(Choices.addDepartment(departmentName), (error, result) => {
-                    console.log(Choices.addDepartment);
                     if (error) {
                         console.log(error);
                     } else {
-                        console.table(result);
-                        console.log('Successfully added a new department');
+                        console.log(`Successfully added ${departmentName} department`);
+                        // User returned to main menu
                         promptUser();
                     }
                 });
@@ -91,7 +93,7 @@ async function promptUser() {
             case 'Add a role':
                 const [departments] = await db.promise().query(Choices.getDepartments);
                 const departmentChoices = departments.map((department) => ({
-                    name: department.name,
+                    name: department.department_name,
                     value: department.id
                 }));
                 const { roleTitle, roleSalary, roleDepartment } = await inquirer.prompt([
@@ -103,7 +105,16 @@ async function promptUser() {
                     {
                         type: 'input',
                         name: 'roleSalary',
-                        message: "Enter a salary for the role"
+                        message: "Enter a salary for the role",
+                        validate: function(value) {
+                            // Use a regular expression to check if the input is a number
+                            const regex = /^[0-9]+$/;
+                            if (value.match(regex)) {
+                              return true;
+                            } else {
+                              return 'Please enter a valid number.';
+                            }
+                        },
                     },
                     {
                         type: 'list',
@@ -116,8 +127,7 @@ async function promptUser() {
                     if (error) {
                         console.log(error);
                     } else {
-                        console.table(result);
-                        console.log('Successfully added a new role');
+                        console.log(`Successfully added ${roleTitle} role`);
                         promptUser();
                     }
                 });
@@ -131,7 +141,7 @@ async function promptUser() {
                 const [currentManagers] = await db.promise().query(Choices.getManagers);
                 const currentManagersChoices = currentManagers.map((currentManager) => ({
                     name: currentManager.name,
-                    value: currentManager.manager_id
+                    value: currentManager.id
                 }));
                 const { firstName, lastName, role, manager } = await inquirer.prompt([
                     {
@@ -161,8 +171,7 @@ async function promptUser() {
                     if (error) {
                         console.log(error);
                     } else {
-                        console.table(result);
-                        console.log('Successfully added a new employee');
+                        console.log(`Successfully added ${firstName} ${lastName} as a new employee`);
                         promptUser();
                     }
                 });
@@ -178,7 +187,6 @@ async function promptUser() {
                     name: updateRole.title,
                     value: updateRole.id
                 }));
-                console.log(currentEmployees);
                 const { employees, roles } = await inquirer.prompt([
                     {
                       type: 'list',
@@ -192,13 +200,14 @@ async function promptUser() {
                       message: 'Select which role you want to update the employee to',
                       choices: updateRolesChoices
                     }
-                  ]);                  
+                  ]);   
                 db.execute(Choices.uRole(roles, employees), (error, result) => {
                     if (error) {
                         console.log(error);
                     } else {
-                        console.table(result)
-                        console.log('Successfully updated employees role');
+                        const selectedEmployee = currentEmployees.find(employee => employee.id === employees);
+                        const selectedRole = updateRoles.find(role => role.id === roles);
+                        console.log(`Successfully updated ${selectedEmployee.name}'s role to ${selectedRole.title}`);
                         promptUser();
                     }
                 });
